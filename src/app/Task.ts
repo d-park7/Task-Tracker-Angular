@@ -1,6 +1,6 @@
-export interface Task {
-  id?: number;
-  text: string;
-  day: string;
-  reminder: boolean;
+export class Task {
+  id?: String;
+  text: String;
+  day: String;
+  reminder: Boolean;
 }

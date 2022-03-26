@@ -35,7 +35,6 @@ export class AddTaskComponent implements OnInit {
       day: this.day,
       reminder: this.reminder
     }
-
     this.onAddTask.emit(newTask);
 
     this.text = '';

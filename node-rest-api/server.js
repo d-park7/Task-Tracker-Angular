@@ -1,25 +1,54 @@
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config()
-}
-
 const mongoose = require('mongoose')
 const cors = require('cors')
 const express = require('express')
 const Tasks = require('./Tasks')
 
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
+
+mongoose.connect(process.env.DATABASE_URL)
+  .then((conn) => {
+    console.log(`Connected to database: ${conn.connections[0].name}`)
+  })
+  .catch((err) => {
+    console.error(err.message)
+  })
+
 const app = express()
   .use(cors())
-
-mongoose.connect(process.env.DATABASE_URL, () => {
-  console.log('Connected to database')
-})
 
 app.listen(3000)
 
 app.get('/tasks', async (req, res) => {
   const tasks = await Tasks.find({})
-  console.log(tasks[1].text)
-  res.json({ text: task.text, day: task.day, reminder: task.reminder })
+  res.json(tasks)
+})
+
+app.get('/tasks/:id', async (req, res) => {
+  console.log(req.params.id)
+  const task = await Tasks.findById(req.params.id)
+  console.log(task)
+  res.json(task)
+})
+
+app.post('/tasks/add', async (req, res) => {
+  console.log(req.body)
+  res.json(req.body)
+})
+
+app.delete('/tasks-delete/:id', async (req, res) => {
+  //console.log(req.params.id)
+  const task = await Tasks.findById(req.params.id)
+  //console.log(task)
+  try {
+    await Tasks.deleteOne({ _id: req.params.id }).then((msg) => {
+      console.log(msg)
+    })
+  } catch (err) {
+    console.error(err)
+  }
+  res.json(task)
 })
 
 async function createTask() {

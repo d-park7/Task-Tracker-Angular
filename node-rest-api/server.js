@@ -1,11 +1,19 @@
 const mongoose = require('mongoose')
+const bodyParser = require('body-parser')
 const cors = require('cors')
 const express = require('express')
-const Tasks = require('./Tasks')
+const Task = require('./models/Task')
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
+
+const app = express()
+  .use(cors())
+  .use(bodyParser.json())
+  .use(bodyParser.urlencoded({ extended: false }))
+
+app.listen(3000)
 
 mongoose.connect(process.env.DATABASE_URL)
   .then((conn) => {
@@ -15,53 +23,54 @@ mongoose.connect(process.env.DATABASE_URL)
     console.error(err.message)
   })
 
-const app = express()
-  .use(cors())
-
-app.listen(3000)
-
 app.get('/tasks', async (req, res) => {
-  const tasks = await Tasks.find({})
-  res.json(tasks)
+  try {
+    const tasks = await Task.find({})
+    res.json(tasks)
+  } catch (err) {
+    console.error(err)
+  }
 })
 
 app.get('/tasks/:id', async (req, res) => {
   console.log(req.params.id)
-  const task = await Tasks.findById(req.params.id)
+  const task = await Task.findById(req.params.id)
   console.log(task)
   res.json(task)
 })
 
 app.post('/tasks/add', async (req, res) => {
-  console.log(req.body)
-  res.json(req.body)
-})
-
-app.delete('/tasks-delete/:id', async (req, res) => {
-  //console.log(req.params.id)
-  const task = await Tasks.findById(req.params.id)
-  //console.log(task)
   try {
-    await Tasks.deleteOne({ _id: req.params.id }).then((msg) => {
-      console.log(msg)
+    const task = await Task.create({
+      text: req.body.text,
+      day: req.body.day,
+      reminder: req.body.reminder
     })
+    res.json(task)
   } catch (err) {
     console.error(err)
   }
-  res.json(task)
 })
 
-async function createTask() {
-  try {
-    const task = await Tasks.create({
-      text: "testTask2",
-      day: "testDay2",
-      reminder: true
-    })
-    //console.log(task)
-  } catch (e) {
-    console.log(e.message)
-  }
-}
+app.put('/tasks/update/:id', (req, res) => {
+  query = { '_id': req.params.id }
+  Task.findOneAndUpdate(query, req.body,
+    (err, task) => {
+      if (err) {
+        console.error(err)
+      } else {
+        console.log(task)
+      }
+  })
+})
 
-//createTask()
+
+app.delete('/tasks/delete/:id', async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id)
+    await Task.deleteOne(task)
+    res.json(task)
+  } catch (err) {
+    console.error(err)
+  }
+})
